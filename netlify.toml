@@ -2,7 +2,6 @@
   functions = "netlify/functions"
   node_bundler = "esbuild"
 
-# Gọn URL
 [[redirects]]
   from = "/check"
   to = "/.netlify/functions/api"
