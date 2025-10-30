@@ -1,4 +1,3 @@
-// ✅ Phiên bản hoạt động ổn định, dùng API Ninjas WHOIS
 const API_KEY = "4wpYpPs6O/srBvF8MKhC/g==WlwI1TCnyP8cab4J"; // ← key của bạn
 
 export async function handler(event) {
@@ -18,14 +17,24 @@ export async function handler(event) {
       if (!data.domain_name)
         return json({ error: "❌ Không tìm thấy thông tin tên miền." });
 
+      // 🧠 Chuyển timestamp sang dạng ngày
+      const toDate = (val) => {
+        if (!val) return "Không rõ";
+        const t = Array.isArray(val) ? val[0] : val;
+        const date = new Date(t * 1000);
+        return isNaN(date) ? val : `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+      };
+
       return json({
         "🌐 Tên miền": data.domain_name,
         "🏢 Nhà đăng ký": data.registrar || "Không rõ",
         "👤 Người đăng ký": data.registrant || "Không rõ",
-        "📅 Ngày tạo": data.creation_date || "Không rõ",
-        "⌛ Ngày hết hạn": data.expiration_date || "Không rõ",
+        "📅 Ngày tạo": toDate(data.creation_date),
+        "⌛ Ngày hết hạn": toDate(data.expiration_date),
         "🔐 DNSSEC": data.dnssec || "Không có",
-        "🖥️ Name Servers": data.name_servers || "Không rõ",
+        "🖥️ Name Servers": Array.isArray(data.name_servers)
+          ? data.name_servers.join(", ")
+          : data.name_servers || "Không rõ",
         "📋 Trạng thái": data.status || "Không rõ",
       });
     } catch (err) {
@@ -55,6 +64,7 @@ export async function handler(event) {
     });
   }
 
+  // --- Default ---
   return json({ message: "Dùng /check?=domain hoặc /date?=dd/mm/yyyy" });
 }
 
