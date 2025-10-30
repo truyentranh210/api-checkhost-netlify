@@ -1,31 +1,34 @@
-import whois from "whois-json";
-
 export async function handler(event) {
   const { path, rawQuery } = event;
 
-  // ---- /check?=example.com ----
+  // --- /check?=example.com ---
   if (path.includes("/check")) {
     const domain = rawQuery?.replace("=", "").trim();
     if (!domain) return json({ error: "⚠️ Vui lòng nhập ?=tên_miền" }, 400);
 
     try {
-      const info = await whois(domain);
+      // Dùng API công khai — không cần package ngoài
+      const res = await fetch(`https://api.domainsdb.info/v1/domains/search?domain=${domain}`);
+      const data = await res.json();
+
+      if (!data.domains || data.domains.length === 0)
+        return json({ error: "❌ Không tìm thấy thông tin tên miền." });
+
+      const info = data.domains[0];
       return json({
-        "🌐 Tên miền": info.domainName || domain,
-        "👤 Người đăng ký": info.registrantName || info.owner || "Không rõ",
+        "🌐 Tên miền": info.domain,
         "🏢 Nhà đăng ký": info.registrar || "Không rõ",
-        "📅 Ngày tạo": info.creationDate || "Không rõ",
-        "⌛ Ngày hết hạn": info.registryExpiryDate || info.expirationDate || "Không rõ",
-        "🔐 DNSSEC": info.dnssec || "Không có",
-        "🖥️ Name Servers": info.nameServer || info.nameServers || "Không rõ",
-        "📋 Trạng thái": info.status || "Không rõ",
+        "📅 Ngày tạo": info.create_date || "Không rõ",
+        "⌛ Ngày hết hạn": info.expire_date || "Không rõ",
+        "🖥️ Name Servers": info.name_servers?.join(", ") || "Không rõ",
+        "📋 Trạng thái": info.is_dead ? "Không hoạt động" : "Hoạt động",
       });
-    } catch (e) {
-      return json({ error: "❌ Không thể tra thông tin tên miền." }, 500);
+    } catch (err) {
+      return json({ error: "❌ Không thể kết nối API tra cứu." });
     }
   }
 
-  // ---- /date?=1/1/2023 ----
+  // --- /date?=1/1/2023 ---
   if (path.includes("/date")) {
     const input = rawQuery?.replace("=", "").trim();
     if (!input) return json({ error: "⚠️ Vui lòng nhập ?=ngày/tháng/năm" }, 400);
@@ -47,11 +50,11 @@ export async function handler(event) {
     });
   }
 
-  // ---- Default ----
+  // --- Default ---
   return json({ message: "Dùng /check?=domain hoặc /date?=dd/mm/yyyy" });
 }
 
-// Helper: trả JSON
+// Helper trả JSON
 function json(data, status = 200) {
   return {
     statusCode: status,
