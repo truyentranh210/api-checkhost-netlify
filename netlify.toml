@@ -1,0 +1,16 @@
+[build]
+  functions = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Gọn URL
+[[redirects]]
+  from = "/check"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/date"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
