@@ -1,3 +1,6 @@
+// ✅ Phiên bản hoạt động ổn định, dùng API Ninjas WHOIS
+const API_KEY = "4wpYpPs6O/srBvF8MKhC/g==WlwI1TCnyP8cab4J"; // ← key của bạn
+
 export async function handler(event) {
   const { path, rawQuery } = event;
 
@@ -7,24 +10,26 @@ export async function handler(event) {
     if (!domain) return json({ error: "⚠️ Vui lòng nhập ?=tên_miền" }, 400);
 
     try {
-      // Dùng API công khai miễn phí — không cần cài gói
-      const res = await fetch(`https://api.domainsdb.info/v1/domains/search?domain=${domain}`);
+      const res = await fetch(`https://api.api-ninjas.com/v1/whois?domain=${domain}`, {
+        headers: { "X-Api-Key": API_KEY },
+      });
       const data = await res.json();
 
-      if (!data.domains || data.domains.length === 0)
+      if (!data.domain_name)
         return json({ error: "❌ Không tìm thấy thông tin tên miền." });
 
-      const info = data.domains[0];
       return json({
-        "🌐 Tên miền": info.domain,
-        "🏢 Nhà đăng ký": info.registrar || "Không rõ",
-        "📅 Ngày tạo": info.create_date || "Không rõ",
-        "⌛ Ngày hết hạn": info.expire_date || "Không rõ",
-        "🖥️ Name Servers": info.name_servers?.join(", ") || "Không rõ",
-        "📋 Trạng thái": info.is_dead ? "Không hoạt động" : "Hoạt động",
+        "🌐 Tên miền": data.domain_name,
+        "🏢 Nhà đăng ký": data.registrar || "Không rõ",
+        "👤 Người đăng ký": data.registrant || "Không rõ",
+        "📅 Ngày tạo": data.creation_date || "Không rõ",
+        "⌛ Ngày hết hạn": data.expiration_date || "Không rõ",
+        "🔐 DNSSEC": data.dnssec || "Không có",
+        "🖥️ Name Servers": data.name_servers || "Không rõ",
+        "📋 Trạng thái": data.status || "Không rõ",
       });
     } catch (err) {
-      return json({ error: "❌ Không thể kết nối API tra cứu." });
+      return json({ error: "❌ Lỗi khi kết nối WHOIS API." });
     }
   }
 
@@ -50,11 +55,9 @@ export async function handler(event) {
     });
   }
 
-  // --- Default ---
   return json({ message: "Dùng /check?=domain hoặc /date?=dd/mm/yyyy" });
 }
 
-// Helper trả JSON
 function json(data, status = 200) {
   return {
     statusCode: status,
