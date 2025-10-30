@@ -7,7 +7,7 @@ export async function handler(event) {
     if (!domain) return json({ error: "⚠️ Vui lòng nhập ?=tên_miền" }, 400);
 
     try {
-      // Dùng API công khai — không cần package ngoài
+      // Dùng API công khai miễn phí — không cần cài gói
       const res = await fetch(`https://api.domainsdb.info/v1/domains/search?domain=${domain}`);
       const data = await res.json();
 
