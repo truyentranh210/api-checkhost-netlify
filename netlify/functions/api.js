@@ -1,10 +1,9 @@
-import fetch from "node-fetch";
 import whois from "whois-json";
 
 export async function handler(event) {
   const { path, rawQuery } = event;
 
-  // /check?=example.com
+  // ---- /check?=example.com ----
   if (path.includes("/check")) {
     const domain = rawQuery?.replace("=", "").trim();
     if (!domain) return json({ error: "⚠️ Vui lòng nhập ?=tên_miền" }, 400);
@@ -21,12 +20,12 @@ export async function handler(event) {
         "🖥️ Name Servers": info.nameServer || info.nameServers || "Không rõ",
         "📋 Trạng thái": info.status || "Không rõ",
       });
-    } catch {
+    } catch (e) {
       return json({ error: "❌ Không thể tra thông tin tên miền." }, 500);
     }
   }
 
-  // /date?=1/1/2023
+  // ---- /date?=1/1/2023 ----
   if (path.includes("/date")) {
     const input = rawQuery?.replace("=", "").trim();
     if (!input) return json({ error: "⚠️ Vui lòng nhập ?=ngày/tháng/năm" }, 400);
@@ -48,10 +47,11 @@ export async function handler(event) {
     });
   }
 
-  // Mặc định
+  // ---- Default ----
   return json({ message: "Dùng /check?=domain hoặc /date?=dd/mm/yyyy" });
 }
 
+// Helper: trả JSON
 function json(data, status = 200) {
   return {
     statusCode: status,
