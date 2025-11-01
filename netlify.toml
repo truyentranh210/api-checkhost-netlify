@@ -2,14 +2,23 @@
   functions = "netlify/functions"
   node_bundler = "esbuild"
 
+# ✅ API 1
 [[redirects]]
   from = "/check"
-  to = "/.netlify/functions/api"
+  to = "/.netlify/functions/api/check"
   status = 200
   force = true
 
+# ✅ API 2
 [[redirects]]
   from = "/date"
-  to = "/.netlify/functions/api"
+  to = "/.netlify/functions/api/date"
+  status = 200
+  force = true
+
+# ✅ API HOME – hiển thị toàn bộ chức năng
+[[redirects]]
+  from = "/home"
+  to = "/.netlify/functions/home"
   status = 200
   force = true
