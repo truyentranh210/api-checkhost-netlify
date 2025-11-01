@@ -3,44 +3,70 @@ const API_KEY = "4wpYpPs6O/srBvF8MKhC/g==WlwI1TCnyP8cab4J"; // ← key của b�
 export async function handler(event) {
   const { path, rawQuery } = event;
 
-  // --- 🏠 /home ---
+  // =========================================================
+  // 🏠 /home — HIỂN THỊ TOÀN BỘ THÔNG TIN API
+  // =========================================================
   if (path.includes("/home")) {
     return json({
-      project: "API Check Domain & Date",
+      project: "🌐 API Check Domain & Date",
       author: "truyentranh210",
-      version: "1.0.0",
+      version: "2.0.0",
       updated: new Date().toISOString(),
       description:
-        "API kiểm tra thông tin tên miền (WHOIS) và tính khoảng cách giữa hai ngày, triển khai bằng Netlify Functions.",
-      endpoints: {
-        "/home": "Hiển thị toàn bộ chức năng của API (JSON)",
-        "/check?=domain.com": "Kiểm tra WHOIS domain, ví dụ: /check?=google.com",
-        "/date?=dd/mm/yyyy": "Tính số ngày so với hôm nay, ví dụ: /date?=1/1/2023",
-      },
-      usage: {
-        check: {
+        "API kiểm tra thông tin tên miền (WHOIS) và tính khoảng cách ngày. Viết bằng Netlify Functions (Node.js).",
+      endpoints: [
+        {
+          route: "/home",
           method: "GET",
-          example: "/check?=google.com",
-          note: "Trả thông tin WHOIS: nhà đăng ký, ngày tạo, DNS, v.v."
+          description: "Hiển thị toàn bộ chức năng của API",
+          example: "/home"
+        },
+        {
+          route: "/check?=domain.com",
+          method: "GET",
+          description: "Tra cứu thông tin WHOIS của tên miền",
+          example: "/check?=google.com"
+        },
+        {
+          route: "/date?=dd/mm/yyyy",
+          method: "GET",
+          description: "Tính số ngày giữa ngày nhập và ngày hiện tại",
+          example: "/date?=1/1/2023"
+        }
+      ],
+      usage_guide: {
+        check: {
+          endpoint: "/check?=domain",
+          method: "GET",
+          example: "/check?=example.com",
+          note:
+            "Trả về thông tin đăng ký tên miền như nhà cung cấp, DNS, ngày tạo, ngày hết hạn, v.v."
         },
         date: {
+          endpoint: "/date?=dd/mm/yyyy",
           method: "GET",
           example: "/date?=1/1/2023",
-          note: "Tính số ngày giữa ngày nhập và ngày hiện tại (trước hoặc sau)."
+          note:
+            "Tính số ngày giữa ngày bạn nhập và ngày hiện tại. Trả kết quả âm/dương tương ứng với 'trước' hoặc 'sau'."
         }
-      }
+      },
+      message:
+        "✅ API đang hoạt động tốt! Hãy truy cập /check hoặc /date để sử dụng."
     });
   }
 
-  // --- 🌐 /check?=example.com ---
+  // =========================================================
+  // 🌐 /check?=domain.com — KIỂM TRA WHOIS DOMAIN
+  // =========================================================
   if (path.includes("/check")) {
     const domain = rawQuery?.replace("=", "").trim();
     if (!domain) return json({ error: "⚠️ Vui lòng nhập ?=tên_miền" }, 400);
 
     try {
-      const res = await fetch(`https://api.api-ninjas.com/v1/whois?domain=${domain}`, {
-        headers: { "X-Api-Key": API_KEY },
-      });
+      const res = await fetch(
+        `https://api.api-ninjas.com/v1/whois?domain=${domain}`,
+        { headers: { "X-Api-Key": API_KEY } }
+      );
       const data = await res.json();
 
       if (!data.domain_name)
@@ -65,14 +91,16 @@ export async function handler(event) {
         "🖥️ Name Servers": Array.isArray(data.name_servers)
           ? data.name_servers.join(", ")
           : data.name_servers || "Không rõ",
-        "📋 Trạng thái": data.status || "Không rõ",
+        "📋 Trạng thái": data.status || "Không rõ"
       });
     } catch (err) {
       return json({ error: "❌ Lỗi khi kết nối WHOIS API." });
     }
   }
 
-  // --- 📅 /date?=1/1/2023 ---
+  // =========================================================
+  // 📅 /date?=dd/mm/yyyy — TÍNH KHOẢNG CÁCH NGÀY
+  // =========================================================
   if (path.includes("/date")) {
     const input = rawQuery?.replace("=", "").trim();
     if (!input) return json({ error: "⚠️ Vui lòng nhập ?=ngày/tháng/năm" }, 400);
@@ -91,21 +119,27 @@ export async function handler(event) {
     return json({
       "📅 Ngày nhập": input,
       "📆 Ngày hiện tại": `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`,
-      "⏳ Số ngày": `${abs} ngày (${status})`,
+      "⏳ Số ngày": `${abs} ngày (${status})`
     });
   }
 
-  // --- ❓ Default ---
+  // =========================================================
+  // ❓ DEFAULT — NẾU KHÔNG GỌI ĐÚNG ROUTE
+  // =========================================================
   return json({
-    message: "Dùng /home để xem hướng dẫn, hoặc /check?=domain và /date?=dd/mm/yyyy",
+    message:
+      "⚙️ Hãy dùng /home để xem hướng dẫn, hoặc /check?=domain và /date?=dd/mm/yyyy để chạy API.",
+    example: ["/home", "/check?=google.com", "/date?=1/1/2023"]
   });
 }
 
-// 🧩 Trả JSON chuẩn
+// =========================================================
+// ⚙️ HÀM TRẢ JSON CHUẨN
+// =========================================================
 function json(data, status = 200) {
   return {
     statusCode: status,
     headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(data, null, 2),
+    body: JSON.stringify(data, null, 2)
   };
 }
